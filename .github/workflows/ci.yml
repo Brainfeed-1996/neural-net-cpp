@@ -1,0 +1,43 @@
+name: Neural Net C++ CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up C++ compiler
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: g++
+        version: latest
+        std: c++17
+    
+    - name: Install clang-tools
+      run: sudo apt-get update && sudo apt-get install -y clang-tidy clang-format
+    
+    - name: Compile with g++
+      run: |
+        g++ --version
+        g++ main.cpp -o neuralnet -std=c++17 -Wall -Wextra
+    
+    - name: Compile with clang++
+      run: |
+        clang++ --version
+        clang++ main.cpp -o neuralnet_clang++ -std=c++17 -Wall -Wextra
+    
+    - name: Run neural network
+      run: ./neuralnet
+    
+    - name: Check code formatting
+      run: pip install clang-format && clang-format --style=google -n main.cpp
+    
+    - name: Static analysis
+      run: clang-tidy main.cpp -- -std=c++17 2>&1 | head -20 || echo "Tidy completed"
